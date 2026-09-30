@@ -1,0 +1,45 @@
+name: Build MH ESPORTS APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract MH ESPORTS ZIP
+        run: |
+          mkdir -p project
+          unzip -q MHESPORTS.zip -d project
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Find Gradle project
+        id: find
+        run: |
+          GRADLEW=$(find project -type f -name gradlew -print -quit)
+          if [ -z "$GRADLEW" ]; then
+            echo "No Android Gradle project found in MHESPORTS.zip"
+            exit 1
+          fi
+          echo "root=$(dirname "$GRADLEW")" >> "$GITHUB_OUTPUT"
+
+      - name: Build APK
+        working-directory: ${{ steps.find.outputs.root }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MH-ESPORTS-APK
+          path: ${{ steps.find.outputs.root }}/app/build/outputs/apk/debug/*.apk

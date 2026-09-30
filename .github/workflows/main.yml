@@ -25,18 +25,35 @@ jobs:
       - name: Find Gradle project
         id: find
         run: |
-          GRADLEW=$(find project -type f -name gradlew -print -quit)
-          if [ -z "$GRADLEW" ]; then
-            echo "No Android Gradle project found in MHESPORTS.zip"
+          ROOT=$(find project -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) -print -quit | xargs -r dirname)
+
+          if [ -z "$ROOT" ]; then
+            ROOT=$(find project -type f \( -name "build.gradle" -o -name "build.gradle.kts" \) -print -quit | xargs -r dirname)
+          fi
+
+          if [ -z "$ROOT" ]; then
+            echo "No Gradle project found"
             exit 1
           fi
-          echo "root=$(dirname "$GRADLEW")" >> "$GITHUB_OUTPUT"
+
+          VERSION=$(find "$ROOT" -type f -name "gradle-wrapper.properties" -print -quit | xargs -r sed -n 's/.*gradle-\([0-9][0-9.]*\)-.*/\1/p')
+
+          if [ -z "$VERSION" ]; then
+            VERSION="8.10.2"
+          fi
+
+          echo "root=$ROOT" >> "$GITHUB_OUTPUT"
+          echo "gradle_version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ steps.find.outputs.gradle_version }}
 
       - name: Build APK
         working-directory: ${{ steps.find.outputs.root }}
         run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          gradle --no-daemon assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

@@ -50,7 +50,7 @@ jobs:
         with:
           gradle-version: ${{ steps.find.outputs.gradle_version }}
 
-      - name: Create debug keystore
+            - name: Create debug keystore
         run: |
           keytool -genkeypair -v \
             -keystore project/debug.keystore \

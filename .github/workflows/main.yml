@@ -36,7 +36,7 @@ jobs:
             exit 1
           fi
 
-          VERSION=$(find "$ROOT" -type f -name "gradle-wrapper.properties" -print -quit | xargs -r sed -n 's/.*gradle-\([0-9][0-9.]*\)-.*/\1/p')
+          VERSION=$(find "$ROOT" -type f -name "gradle-wrapper.properties" -print -quit | xargs -r sed -n 's/.*gradle-\([0-9.]*\)-.*/\1/p')
 
           if [ -z "$VERSION" ]; then
             VERSION="8.10.2"
@@ -50,7 +50,7 @@ jobs:
         with:
           gradle-version: ${{ steps.find.outputs.gradle_version }}
 
-            - name: Create debug keystore
+      - name: Create debug keystore
         run: |
           keytool -genkeypair -v \
             -keystore project/debug.keystore \
